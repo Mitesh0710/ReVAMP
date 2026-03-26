@@ -133,10 +133,10 @@ export function AppSidebar() {
         {open && (
           <div className="mb-3 flex items-center gap-3">
             <div className="h-8 w-8 rounded-full bg-zinc-800 flex items-center justify-center shrink-0">
-              <User className="h-4 w-4" />
+              {(user?.display_name || user?.github_login || user?.email || "G")[0].toUpperCase()}
             </div>
             <div className="text-sm truncate text-zinc-300 min-w-0">
-              {user?.email || "Guest"}
+              {user?.display_name || user?.github_login || user?.email || "Guest"}
             </div>
           </div>
         )}

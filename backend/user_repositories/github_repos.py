@@ -403,9 +403,6 @@ async def get_repo_branches(
 
 @router.get("/user")
 async def get_github_user(request: Request):
-    """
-    Get authenticated GitHub user information
-    """
     try:
         github_token = await get_github_token(request)
         
@@ -420,21 +417,67 @@ async def get_github_user(request: Request):
             )
         
         if response.status_code != 200:
-            raise HTTPException(
-                status_code=response.status_code,
-                detail="Failed to fetch user information"
-            )
+            raise HTTPException(status_code=response.status_code, detail="Failed to fetch user information")
         
-        return response.json()
-        
+        gh_data = response.json()
+
+        # Fetch display_name from our DB and merge it in
+        try:
+            from backend.auth.authentication import JWTManager
+            from backend.database import config as db_config
+            from backend.database.service import DatabaseService
+
+            token = request.cookies.get("session_token") or request.cookies.get("access_token")
+            if token:
+                payload = await JWTManager.verify_token(token)
+                if payload and payload.get("sub"):
+                    async with db_config.AsyncSessionLocal() as db:
+                        db_user = await DatabaseService.get_user_by_email(db, payload["sub"])
+                        if db_user:
+                            gh_data["display_name"] = db_user.display_name
+        except Exception as e:
+            logger.warning(f"Could not fetch display_name from DB: {e}")
+
+        return gh_data
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error fetching user: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to fetch user information: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to fetch user information: {str(e)}")
+
+@router.patch("/user")
+async def update_github_user(request: Request):
+    try:
+        from backend.auth.authentication import JWTManager
+        from backend.database import config as db_config
+        from backend.database.service import DatabaseService
+
+        token = request.cookies.get("session_token") or request.cookies.get("access_token")
+        if not token:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+
+        payload = await JWTManager.verify_token(token)
+        if not payload or not payload.get("sub"):
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        body = await request.json()
+        display_name = body.get("display_name", "").strip()
+
+        async with db_config.AsyncSessionLocal() as db:
+            db_user = await DatabaseService.get_user_by_email(db, payload["sub"])
+            if not db_user:
+                raise HTTPException(status_code=404, detail="User not found")
+            db_user.display_name = display_name
+            await db.commit()
+
+        return {"display_name": display_name}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating user: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to update user: {str(e)}")
 
 
 @router.get("/profile")

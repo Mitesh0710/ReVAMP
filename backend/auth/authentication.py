@@ -1143,7 +1143,12 @@ async def github_oauth_callback(
         else:
             if not redirect_url.startswith("http"):
                 redirect_url = f"{Config.DASHBOARD_URL}{redirect_url}"
-
+        # Append tokens to URL so frontend can pick them up
+        params = urlencode({
+           "access_token": access_token,
+           "refresh_token": refresh_token
+        })
+        redirect_url = f"{redirect_url}?{params}"
         logger.info(f"Redirecting to: {redirect_url}")
 
         response = RedirectResponse(url=redirect_url, status_code=303)
@@ -1329,6 +1334,58 @@ async def check_auth_status(identifier: str):
         email_hint=SecurityUtils.mask_email(session.user_email),
         attempts_remaining=max(0, Config.MAX_LOGIN_ATTEMPTS - user.login_attempts)
     )
+    
+@router.get("/user")
+async def get_github_user(request: Request):
+    access_token = request.cookies.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    payload = await JWTManager.verify_token(access_token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    email = payload.get("sub")
+    
+    async with db_config.AsyncSessionLocal() as db:
+        db_user = await DatabaseService.get_user_by_email(db, email)
+        if not db_user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {
+            "login":        db_user.github_login,
+            "name":         db_user.name,
+            "display_name": db_user.display_name,
+            "avatar_url":   db_user.avatar_url,
+            "bio":          None,
+            "location":     None,
+            "html_url":     f"https://github.com/{db_user.github_login}" if db_user.github_login else None,
+        }
+
+
+@router.patch("/user")
+async def update_github_user(request: Request):
+    access_token = request.cookies.get("access_token")
+    if not access_token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    payload = await JWTManager.verify_token(access_token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    email = payload.get("sub")
+    body = await request.json()
+    
+    async with db_config.AsyncSessionLocal() as db:
+        db_user = await DatabaseService.get_user_by_email(db, email)
+        if not db_user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        if "display_name" in body:
+            db_user.display_name = body["display_name"].strip() or None
+            await db.commit()
+        
+        return {"display_name": db_user.display_name}
 
 # ----------------- Background Tasks -----------------
 async def cleanup_task():

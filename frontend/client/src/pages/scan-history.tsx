@@ -3,17 +3,17 @@ import { useNavigate } from "react-router-dom";
 
 const API = "http://localhost:8000";
 
-// ── Color tokens matching repositories.tsx ──────────────────
+// ── Color tokens matching Dashboard.tsx ──────────────────────
 const C = {
-  bg:          "#0d1117",   // page background
-  surface:     "#161b22",   // card background
-  border:      "#21262d",   // borders
-  borderHover: "#30363d",   // hover borders
-  text:        "#c9d1d9",   // primary text
-  muted:       "#8b949e",   // secondary text
-  subtle:      "#4a5568",   // placeholder / very dim
-  accent:      "#58a6ff",   // links / accents (GitHub blue)
-  indigo:      "#6366f1",   // action color
+  bg:          "#000000",                    // black (Dashboard page bg)
+  surface:     "#09090b",                    // Dashboard card bg
+  border:      "rgba(255,255,255,0.05)",     // white/5
+  borderHover: "rgba(255,255,255,0.10)",     // white/10
+  text:        "#f4f4f5",                    // zinc-100
+  muted:       "#a1a1aa",                    // zinc-400
+  subtle:      "#71717a",                    // zinc-500
+  accent:      "#6366f1",                    // indigo-400
+  indigo:      "#6366f1",                    // indigo-600
 };
 
 interface Scan {
@@ -44,13 +44,13 @@ interface Scan {
 }
 
 const STATUS_CONFIG: Record<string, { color: string; bg: string; label: string; icon: string }> = {
-  completed: { color: "#3fb950", bg: "rgba(63,185,80,0.12)",   label: "Completed", icon: "✓" },
-  failed:    { color: "#f85149", bg: "rgba(248,81,73,0.12)",   label: "Failed",    icon: "✗" },
-  running:   { color: "#58a6ff", bg: "rgba(88,166,255,0.12)",  label: "Running",   icon: "⟳" },
-  queued:    { color: "#d29922", bg: "rgba(210,153,34,0.12)",  label: "Queued",    icon: "⏳" },
-  scanning:  { color: "#58a6ff", bg: "rgba(88,166,255,0.12)",  label: "Scanning",  icon: "⟳" },
-  cloning:   { color: "#58a6ff", bg: "rgba(88,166,255,0.12)",  label: "Cloning",   icon: "⟳" },
-  cancelled: { color: "#8b949e", bg: "rgba(139,148,158,0.12)", label: "Cancelled", icon: "⊘" },
+  completed: { color: "#34d399", bg: "rgba(52,211,153,0.10)",   label: "Completed", icon: "✓" },  // emerald-400
+  failed:    { color: "#ef4444", bg: "rgba(239,68,68,0.10)",    label: "Failed",    icon: "✗" },  // red-500
+  running:   { color: "#6366f1", bg: "rgba(99,102,241,0.10)",   label: "Running",   icon: "⟳" },  // indigo
+  queued:    { color: "#f97316", bg: "rgba(249,115,22,0.10)",   label: "Queued",    icon: "⏳" }, // orange-500
+  scanning:  { color: "#6366f1", bg: "rgba(99,102,241,0.10)",   label: "Scanning",  icon: "⟳" },  // indigo
+  cloning:   { color: "#6366f1", bg: "rgba(99,102,241,0.10)",   label: "Cloning",   icon: "⟳" },  // indigo
+  cancelled: { color: "#71717a", bg: "rgba(113,113,122,0.10)",  label: "Cancelled", icon: "⊘" },  // zinc-500
 };
 
 function getStatus(s: string) {
@@ -159,20 +159,31 @@ export default function ScanHistory() {
 
   const statCards = [
     { label: "Total Scans", value: stats.total,     color: C.text },
-    { label: "Completed",   value: stats.completed, color: "#3fb950" },
-    { label: "Failed",      value: stats.failed,    color: "#f85149" },
+    { label: "Completed",   value: stats.completed, color: "#34d399" },  // emerald-400
+    { label: "Failed",      value: stats.failed,    color: "#ef4444" },  // red-500
     { label: "Running",     value: stats.running,   color: C.accent },
   ];
 
   return (
-    <div style={{ background: C.bg, minHeight: "100vh", color: C.text, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div style={{
+      background: C.bg,
+      minHeight: "100vh",
+      color: C.text,
+      fontFamily: "ui-sans-serif, system-ui, sans-serif",
+    }}>
 
       {/* ── Header ─────────────────────────────────────────── */}
       <div style={{ padding: "28px 32px 20px", borderBottom: `1px solid ${C.border}` }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
           <div>
-            <div style={{ fontSize: 10, color: C.indigo, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 6 }}>
-              Security Platform
+            <div style={{
+              fontSize: 10,
+              color: C.indigo,
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+              marginBottom: 6,
+            }}>
+              
             </div>
             <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: C.text }}>Scan History</h1>
             <p style={{ margin: "6px 0 0", fontSize: 12, color: C.muted }}>All repository security scans</p>
@@ -181,12 +192,14 @@ export default function ScanHistory() {
             onClick={loadScans}
             style={{
               padding: "8px 16px",
-              background: C.surface,
-              border: `1px solid ${C.border}`,
+              background: "#4f46e5",       // indigo-600 — matches Dashboard Refresh button
+              border: "none",
               borderRadius: 8,
-              color: C.text,
+              color: "#ffffff",
               fontSize: 12,
+              fontWeight: 600,
               cursor: "pointer",
+              boxShadow: "0 4px 14px rgba(99,102,241,0.25)",
             }}
           >
             ↻ Refresh
@@ -198,19 +211,40 @@ export default function ScanHistory() {
           {statCards.map((card) => (
             <div
               key={card.label}
-              style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, padding: "14px 16px" }}
+              style={{
+                background: C.surface,
+                border: `1px solid ${C.border}`,
+                borderRadius: 10,
+                padding: "14px 16px",
+                transition: "border-color 0.2s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.borderColor = C.borderHover)}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = C.border)}
             >
-              <div style={{ fontSize: 10, color: C.muted, letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>
+              <div style={{
+                fontSize: 10,
+                color: C.muted,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                marginBottom: 6,
+              }}>
                 {card.label}
               </div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: card.color }}>{loading ? "—" : card.value}</div>
+              <div style={{ fontSize: 28, fontWeight: 800, color: card.color, letterSpacing: "-0.5px" }}>
+                {loading ? "—" : card.value}
+              </div>
             </div>
           ))}
         </div>
       </div>
 
       {/* ── Filters ─────────────────────────────────────────── */}
-      <div style={{ padding: "16px 32px", borderBottom: `1px solid ${C.border}`, display: "flex", gap: 12 }}>
+      <div style={{
+        padding: "16px 32px",
+        borderBottom: `1px solid ${C.border}`,
+        display: "flex",
+        gap: 12,
+      }}>
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -224,7 +258,10 @@ export default function ScanHistory() {
             color: C.text,
             fontSize: 13,
             outline: "none",
+            transition: "border-color 0.2s",
           }}
+          onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(99,102,241,0.5)")}
+          onBlur={(e) => (e.currentTarget.style.borderColor = C.border)}
         />
         <select
           value={statusFilter}
@@ -253,12 +290,12 @@ export default function ScanHistory() {
         {error && (
           <div
             style={{
-              background: "rgba(248,81,73,0.08)",
-              border: "1px solid rgba(248,81,73,0.3)",
+              background: "rgba(239,68,68,0.08)",
+              border: "1px solid rgba(239,68,68,0.3)",
               borderRadius: 10,
               padding: "16px 20px",
               marginBottom: 20,
-              color: "#f85149",
+              color: "#ef4444",
               fontSize: 13,
               display: "flex",
               alignItems: "center",
@@ -271,10 +308,10 @@ export default function ScanHistory() {
               style={{
                 marginLeft: "auto",
                 padding: "4px 12px",
-                background: "rgba(248,81,73,0.12)",
-                border: "1px solid rgba(248,81,73,0.3)",
+                background: "rgba(239,68,68,0.12)",
+                border: "1px solid rgba(239,68,68,0.3)",
                 borderRadius: 6,
-                color: "#f85149",
+                color: "#ef4444",
                 fontSize: 12,
                 cursor: "pointer",
               }}
@@ -323,7 +360,7 @@ export default function ScanHistory() {
                   onMouseEnter={(e) => {
                     if (scan.status === "completed") {
                       (e.currentTarget as HTMLDivElement).style.borderColor = C.borderHover;
-                      (e.currentTarget as HTMLDivElement).style.background = "#1c2128";
+                      (e.currentTarget as HTMLDivElement).style.background = "#18181b"; // zinc-900
                     }
                   }}
                   onMouseLeave={(e) => {
@@ -348,7 +385,12 @@ export default function ScanHistory() {
                     >
                       {st.icon}
                     </div>
-                    <span style={{ fontSize: 9, color: st.color, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    <span style={{
+                      fontSize: 9,
+                      color: st.color,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.05em",
+                    }}>
                       {st.label}
                     </span>
                   </div>
@@ -368,29 +410,69 @@ export default function ScanHistory() {
 
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 6 }}>
                       {scan.severity_summary?.CRITICAL > 0 && (
-                        <span style={{ fontSize: 11, padding: "2px 8px", background: "rgba(248,81,73,0.1)", color: "#f85149", borderRadius: 4, border: "1px solid rgba(248,81,73,0.2)" }}>
+                        <span style={{
+                          fontSize: 11, padding: "2px 8px",
+                          background: "rgba(239,68,68,0.10)",   // red-500/10
+                          color: "#ef4444",
+                          borderRadius: 4,
+                          border: "1px solid rgba(239,68,68,0.20)",
+                        }}>
                           ● {scan.severity_summary.CRITICAL} Critical
                         </span>
                       )}
                       {scan.severity_summary?.HIGH > 0 && (
-                        <span style={{ fontSize: 11, padding: "2px 8px", background: "rgba(210,153,34,0.1)", color: "#d29922", borderRadius: 4, border: "1px solid rgba(210,153,34,0.2)" }}>
+                        <span style={{
+                          fontSize: 11, padding: "2px 8px",
+                          background: "rgba(249,115,22,0.10)",  // orange-500/10
+                          color: "#f97316",
+                          borderRadius: 4,
+                          border: "1px solid rgba(249,115,22,0.20)",
+                        }}>
                           ● {scan.severity_summary.HIGH} High
                         </span>
                       )}
                       {scan.severity_summary?.MEDIUM > 0 && (
-                        <span style={{ fontSize: 11, padding: "2px 8px", background: "rgba(88,166,255,0.1)", color: C.accent, borderRadius: 4, border: "1px solid rgba(88,166,255,0.2)" }}>
+                        <span style={{
+                          fontSize: 11, padding: "2px 8px",
+                          background: "rgba(234,179,8,0.10)",   // yellow-500/10
+                          color: "#eab308",
+                          borderRadius: 4,
+                          border: "1px solid rgba(234,179,8,0.20)",
+                        }}>
                           ● {scan.severity_summary.MEDIUM} Medium
+                        </span>
+                      )}
+                      {scan.severity_summary?.LOW > 0 && (
+                        <span style={{
+                          fontSize: 11, padding: "2px 8px",
+                          background: "rgba(59,130,246,0.10)",  // blue-500/10
+                          color: "#3b82f6",
+                          borderRadius: 4,
+                          border: "1px solid rgba(59,130,246,0.20)",
+                        }}>
+                          ● {scan.severity_summary.LOW} Low
                         </span>
                       )}
                       {!scan.severity_summary &&
                         (scan.total_issues || scan.total_vulnerabilities) > 0 && (
-                          <span style={{ fontSize: 11, padding: "2px 8px", background: "rgba(210,153,34,0.1)", color: "#d29922", borderRadius: 4 }}>
+                          <span style={{
+                            fontSize: 11, padding: "2px 8px",
+                            background: "rgba(249,115,22,0.10)",
+                            color: "#f97316",
+                            borderRadius: 4,
+                          }}>
                             {scan.total_issues || scan.total_vulnerabilities} issues
                           </span>
                         )}
                       {scan.status === "completed" &&
                         (scan.total_issues || scan.total_vulnerabilities || 0) === 0 && (
-                          <span style={{ fontSize: 11, padding: "2px 8px", background: "rgba(63,185,80,0.1)", color: "#3fb950", borderRadius: 4, border: "1px solid rgba(63,185,80,0.2)" }}>
+                          <span style={{
+                            fontSize: 11, padding: "2px 8px",
+                            background: "rgba(52,211,153,0.10)",  // emerald-400/10
+                            color: "#34d399",
+                            borderRadius: 4,
+                            border: "1px solid rgba(52,211,153,0.20)",
+                          }}>
                             ✓ Clean
                           </span>
                         )}
@@ -406,11 +488,11 @@ export default function ScanHistory() {
                         style={{
                           marginTop: 6,
                           fontSize: 11,
-                          color: "#f85149",
-                          background: "rgba(248,81,73,0.06)",
+                          color: "#ef4444",
+                          background: "rgba(239,68,68,0.06)",
                           padding: "4px 8px",
                           borderRadius: 4,
-                          border: "1px solid rgba(248,81,73,0.15)",
+                          border: "1px solid rgba(239,68,68,0.15)",
                         }}
                       >
                         {scan.error_message}
@@ -445,9 +527,9 @@ export default function ScanHistory() {
                       style={{
                         padding: "6px 14px",
                         background: "transparent",
-                        border: "1px solid rgba(248,81,73,0.3)",
+                        border: "1px solid rgba(239,68,68,0.30)",
                         borderRadius: 6,
-                        color: "#f85149",
+                        color: "#ef4444",
                         fontSize: 12,
                         cursor: "pointer",
                       }}

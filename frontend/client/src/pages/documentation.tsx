@@ -2,16 +2,16 @@
 import React, { useState } from "react";
 import { Search, ExternalLink } from "lucide-react";
 
-// ── Color tokens matching repositories.tsx ──────────────────
 const C = {
-  bg:      "#0d1117",
-  surface: "#161b22",
-  border:  "#21262d",
-  borderH: "#30363d",
-  text:    "#c9d1d9",
-  muted:   "#8b949e",
-  subtle:  "#6e7681",
-  accent:  "#58a6ff",
+  bg:          "#000000",
+  surface:     "#09090b",
+  border:      "rgba(255,255,255,0.05)",
+  borderHover: "rgba(255,255,255,0.10)",
+  text:        "#f4f4f5",
+  muted:       "#a1a1aa",
+  subtle:      "#71717a",
+  accent:      "#6366f1",
+  indigo:      "#6366f1",
 };
 
 const nav = [
@@ -203,31 +203,66 @@ GET  /api/scanning/dashboard/vulnerable-files  Top vulnerable files`}</pre>
 ];
 
 export default function Documentation() {
-  const [active, setActive]   = useState({ section: 0, article: 0 });
-  const [search, setSearch]   = useState("");
+  const [active, setActive] = useState({ section: 0, article: 0 });
+  const [search, setSearch] = useState("");
 
   const allArticles = nav.flatMap((s, si) =>
     s.articles.map((a, ai) => ({ ...a, si, ai, section: s.section }))
   );
-  const results = search.length > 1
-    ? allArticles.filter(
-        (a) =>
-          a.title.toLowerCase().includes(search.toLowerCase()) ||
-          a.section.toLowerCase().includes(search.toLowerCase())
-      )
-    : [];
+  const results =
+    search.length > 1
+      ? allArticles.filter(
+          (a) =>
+            a.title.toLowerCase().includes(search.toLowerCase()) ||
+            a.section.toLowerCase().includes(search.toLowerCase())
+        )
+      : [];
 
   const current = nav[active.section]?.articles[active.article];
 
   return (
-    <div style={{ display: "flex", height: "100vh", background: C.bg, color: C.text, overflow: "hidden", width: "100%", fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div style={{
+      display: "flex",
+      height: "100vh",
+      background: C.bg,
+      color: C.text,
+      overflow: "hidden",
+      width: "100%",
+      fontFamily: "ui-sans-serif, system-ui, sans-serif",
+    }}>
 
-      {/* ── Sidebar ─────────────────────────────────────── */}
-      <div style={{ width: 240, borderRight: `1px solid ${C.border}`, display: "flex", flexDirection: "column", flexShrink: 0, overflowY: "auto" }}>
+      {/* ── Left Sidebar ── */}
+      <div style={{
+        width: 240,
+        borderRight: `1px solid ${C.border}`,
+        display: "flex",
+        flexDirection: "column",
+        flexShrink: 0,
+        overflowY: "auto",
+      }}>
+
+        {/* Sidebar header — matches app sidebar style */}
         <div style={{ padding: "20px 16px 12px" }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginBottom: 12 }}>Documentation</div>
+          <div style={{
+            fontSize: 10,
+            color: C.indigo,
+            letterSpacing: "0.15em",
+            textTransform: "uppercase",
+            marginBottom: 6,
+          }}>
+            
+          </div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: C.text, marginBottom: 14 }}>
+            Documentation
+          </div>
+
+          {/* Search */}
           <div style={{ position: "relative" }}>
-            <Search style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", width: 11, height: 11, color: C.subtle }} />
+            <Search style={{
+              position: "absolute", left: 9, top: "50%",
+              transform: "translateY(-50%)",
+              width: 11, height: 11, color: C.subtle,
+            }} />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -243,7 +278,10 @@ export default function Documentation() {
                 outline: "none",
                 boxSizing: "border-box",
                 fontFamily: "inherit",
+                transition: "border-color 0.2s",
               }}
+              onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(99,102,241,0.5)")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = C.border)}
             />
           </div>
 
@@ -282,7 +320,15 @@ export default function Documentation() {
         <nav style={{ flex: 1, padding: "4px 12px 16px" }}>
           {nav.map((s, si) => (
             <div key={si} style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 10, color: C.subtle, textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 700, padding: "0 4px", marginBottom: 4 }}>
+              <div style={{
+                fontSize: 10,
+                color: C.subtle,
+                textTransform: "uppercase",
+                letterSpacing: "0.12em",
+                fontWeight: 700,
+                padding: "0 4px",
+                marginBottom: 4,
+              }}>
                 {s.section}
               </div>
               {s.articles.map((a, ai) => {
@@ -304,6 +350,13 @@ export default function Documentation() {
                       fontSize: 13,
                       display: "block",
                       transition: "all 0.1s",
+                      borderLeft: isActive ? `2px solid ${C.accent}` : "2px solid transparent",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) e.currentTarget.style.color = C.text;
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) e.currentTarget.style.color = C.muted;
                     }}
                   >
                     {a.title}
@@ -314,9 +367,16 @@ export default function Documentation() {
           ))}
         </nav>
 
-        {/* Resources */}
+        {/* External Resources */}
         <div style={{ padding: "12px 16px", borderTop: `1px solid ${C.border}` }}>
-          <div style={{ fontSize: 10, color: C.subtle, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 8 }}>
+          <div style={{
+            fontSize: 10,
+            color: C.subtle,
+            textTransform: "uppercase",
+            letterSpacing: "0.12em",
+            marginBottom: 10,
+            fontWeight: 700,
+          }}>
             Resources
           </div>
           {[
@@ -329,49 +389,173 @@ export default function Documentation() {
               href={href}
               target="_blank"
               rel="noreferrer"
-              style={{ display: "flex", alignItems: "center", gap: 5, padding: "4px 0", fontSize: 12, color: C.muted, textDecoration: "none" }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "5px 0",
+                fontSize: 12,
+                color: C.muted,
+                textDecoration: "none",
+                transition: "color 0.15s",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = C.text)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = C.muted)}
             >
-              <ExternalLink style={{ width: 10, height: 10 }} /> {label}
+              <ExternalLink style={{ width: 10, height: 10, flexShrink: 0 }} />
+              {label}
             </a>
           ))}
         </div>
       </div>
 
-      {/* ── Content ─────────────────────────────────────── */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "36px 48px", minWidth: 0 }}>
-        <style>{`
-          .doc-content h1 { font-size: 26px; font-weight: 800; color: ${C.text}; margin: 0 0 8px; line-height: 1.2; }
-          .doc-content > div > p:first-of-type { font-size: 15px; color: ${C.muted}; margin: 0 0 32px; line-height: 1.7; border-bottom: 1px solid ${C.border}; padding-bottom: 24px; }
-          .doc-content h2 { font-size: 15px; font-weight: 700; color: ${C.text}; margin: 28px 0 10px; }
-          .doc-content p { font-size: 13px; color: ${C.muted}; line-height: 1.8; margin: 0 0 14px; }
-          .doc-content ul, .doc-content ol { padding-left: 20px; margin: 0 0 16px; }
-          .doc-content li { font-size: 13px; color: ${C.muted}; line-height: 1.8; margin-bottom: 4px; }
-          .doc-content strong { color: ${C.text}; font-weight: 600; }
-          .doc-content code { font-size: 12px; background: ${C.surface}; border: 1px solid ${C.border}; padding: 2px 6px; border-radius: 4px; color: ${C.accent}; font-family: 'Fira Code', monospace; }
-          .doc-content pre { background: ${C.surface}; border: 1px solid ${C.border}; border-radius: 8px; padding: 16px 18px; font-size: 12px; color: ${C.text}; line-height: 1.8; overflow-x: auto; margin: 0 0 16px; font-family: 'Fira Code', 'Courier New', monospace; white-space: pre; }
-        `}</style>
-        <div className="doc-content">
-          {current?.content}
+      {/* ── Main Content ── */}
+      <div style={{ flex: 1, overflowY: "auto", minWidth: 0 }}>
+
+        {/* Content header — matches ScanHistory/Vulnerabilities header structure */}
+        <div style={{ padding: "28px 48px 20px", borderBottom: `1px solid ${C.border}` }}>
+          <div style={{
+            fontSize: 10,
+            color: C.indigo,
+            letterSpacing: "0.15em",
+            textTransform: "uppercase",
+            marginBottom: 6,
+          }}>
+            
+          </div>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: C.text }}>
+            {current?.title}
+          </h1>
+          <p style={{ margin: "6px 0 0", fontSize: 12, color: C.muted }}>
+            {nav[active.section]?.section}
+          </p>
         </div>
 
-        {/* Prev / Next */}
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: 48, paddingTop: 20, borderTop: `1px solid ${C.border}` }}>
-          {active.article > 0 ? (
-            <button
-              onClick={() => setActive((p) => ({ ...p, article: p.article - 1 }))}
-              style={{ fontSize: 13, color: C.muted, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}
-            >
-              ← {nav[active.section].articles[active.article - 1].title}
-            </button>
-          ) : <div />}
-          {active.article < nav[active.section].articles.length - 1 && (
-            <button
-              onClick={() => setActive((p) => ({ ...p, article: p.article + 1 }))}
-              style={{ fontSize: 13, color: C.muted, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}
-            >
-              {nav[active.section].articles[active.article + 1].title} →
-            </button>
-          )}
+        {/* Article body */}
+        <div style={{ padding: "32px 48px" }}>
+          <style>{`
+            .doc-content h1 { display: none; }
+            .doc-content h2 {
+              font-size: 14px;
+              font-weight: 700;
+              color: ${C.text};
+              margin: 28px 0 10px;
+              padding-bottom: 8px;
+              border-bottom: 1px solid ${C.border};
+              letter-spacing: 0.01em;
+            }
+            .doc-content p {
+              font-size: 13px;
+              color: ${C.muted};
+              line-height: 1.8;
+              margin: 0 0 14px;
+            }
+            .doc-content ul, .doc-content ol {
+              padding-left: 20px;
+              margin: 0 0 16px;
+            }
+            .doc-content li {
+              font-size: 13px;
+              color: ${C.muted};
+              line-height: 1.8;
+              margin-bottom: 6px;
+            }
+            .doc-content strong { color: ${C.text}; font-weight: 600; }
+            .doc-content code {
+              font-size: 12px;
+              background: ${C.surface};
+              border: 1px solid ${C.border};
+              padding: 2px 6px;
+              border-radius: 4px;
+              color: ${C.accent};
+              font-family: 'Fira Code', monospace;
+            }
+            .doc-content pre {
+              background: ${C.surface};
+              border: 1px solid ${C.border};
+              border-radius: 8px;
+              padding: 16px 18px;
+              font-size: 12px;
+              color: ${C.text};
+              line-height: 1.8;
+              overflow-x: auto;
+              margin: 0 0 16px;
+              font-family: 'Fira Code', 'Courier New', monospace;
+              white-space: pre;
+            }
+            .doc-content pre code {
+              background: transparent;
+              border: none;
+              padding: 0;
+              color: ${C.text};
+            }
+          `}</style>
+          <div className="doc-content">
+            {current?.content}
+          </div>
+
+          {/* Prev / Next navigation */}
+          <div style={{
+            display: "flex",
+            justifyContent: "space-between",
+            marginTop: 48,
+            paddingTop: 20,
+            borderTop: `1px solid ${C.border}`,
+          }}>
+            {active.article > 0 ? (
+              <button
+                onClick={() => setActive((p) => ({ ...p, article: p.article - 1 }))}
+                style={{
+                  fontSize: 13,
+                  color: C.muted,
+                  background: C.surface,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 8,
+                  padding: "8px 16px",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  transition: "border-color 0.15s, color 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = C.text;
+                  e.currentTarget.style.borderColor = C.borderHover;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = C.muted;
+                  e.currentTarget.style.borderColor = C.border;
+                }}
+              >
+                ← {nav[active.section].articles[active.article - 1].title}
+              </button>
+            ) : <div />}
+
+            {active.article < nav[active.section].articles.length - 1 && (
+              <button
+                onClick={() => setActive((p) => ({ ...p, article: p.article + 1 }))}
+                style={{
+                  fontSize: 13,
+                  color: C.muted,
+                  background: C.surface,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 8,
+                  padding: "8px 16px",
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  transition: "border-color 0.15s, color 0.15s",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = C.text;
+                  e.currentTarget.style.borderColor = C.borderHover;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = C.muted;
+                  e.currentTarget.style.borderColor = C.border;
+                }}
+              >
+                {nav[active.section].articles[active.article + 1].title} →
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

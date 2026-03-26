@@ -20,6 +20,7 @@ class User(Base):
     github_login = Column(String(255), nullable=True)
     name = Column(String(255), nullable=True)
     avatar_url = Column(Text, nullable=True)
+    display_name = Column(String(255), nullable=True)
     
     # Security flags
     email_verified = Column(Boolean, default=False, nullable=False)
@@ -52,6 +53,7 @@ class User(Base):
             'email': self.email,
             'github_id': self.github_id,
             'github_login': self.github_login,
+            'display_name': self.display_name,
             'name': self.name,
             'avatar_url': self.avatar_url,
             'email_verified': self.email_verified,

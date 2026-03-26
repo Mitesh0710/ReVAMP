@@ -4,14 +4,15 @@ import { useSearchParams } from "react-router-dom";
 const API = "http://localhost:8000";
 
 const C = {
-  bg:      "#0d1117",
-  surface: "#161b22",
-  border:  "#21262d",
-  borderH: "#30363d",
-  text:    "#e6edf3",
-  muted:   "#8b949e",
-  subtle:  "#6e7681",
-  accent:  "#58a6ff",
+  bg:          "#000000",
+  surface:     "#09090b",
+  border:      "rgba(255,255,255,0.05)",
+  borderHover: "rgba(255,255,255,0.10)",
+  text:        "#f4f4f5",
+  muted:       "#a1a1aa",
+  subtle:      "#71717a",
+  accent:      "#6366f1",
+  indigo:      "#6366f1",
 };
 
 interface Vulnerability {
@@ -40,16 +41,18 @@ interface Scan {
   completed_at: string;
 }
 
-const SEV: Record<string, { color: string; bg: string; border: string }> = {
-  critical: { color: "#f85149", bg: "rgba(248,81,73,0.08)",   border: "rgba(248,81,73,0.25)" },
-  high:     { color: "#d29922", bg: "rgba(210,153,34,0.08)",  border: "rgba(210,153,34,0.25)" },
-  medium:   { color: "#58a6ff", bg: "rgba(88,166,255,0.08)",  border: "rgba(88,166,255,0.25)" },
-  low:      { color: "#3fb950", bg: "rgba(63,185,80,0.08)",   border: "rgba(63,185,80,0.25)" },
-  info:     { color: "#8b949e", bg: "rgba(139,148,158,0.08)", border: "rgba(139,148,158,0.25)" },
-  warning:  { color: "#d29922", bg: "rgba(210,153,34,0.08)",  border: "rgba(210,153,34,0.25)" },
+const SEV_CONFIG: Record<string, { color: string; bg: string; border: string; label: string; symbol: string }> = {
+  critical: { color: "#ef4444", bg: "rgba(239,68,68,0.10)",   border: "rgba(239,68,68,0.20)",   label: "Critical", symbol: "!" },
+  high:     { color: "#f97316", bg: "rgba(249,115,22,0.10)",  border: "rgba(249,115,22,0.20)",  label: "High",     symbol: "↑" },
+  medium:   { color: "#eab308", bg: "rgba(234,179,8,0.10)",   border: "rgba(234,179,8,0.20)",   label: "Medium",   symbol: "~" },
+  low:      { color: "#3b82f6", bg: "rgba(59,130,246,0.10)",  border: "rgba(59,130,246,0.20)",  label: "Low",      symbol: "·" },
+  info:     { color: "#71717a", bg: "rgba(113,113,122,0.10)", border: "rgba(113,113,122,0.20)", label: "Info",     symbol: "i" },
+  warning:  { color: "#f97316", bg: "rgba(249,115,22,0.10)",  border: "rgba(249,115,22,0.20)",  label: "Warning",  symbol: "~" },
 };
 
-function s(sev: string) { return SEV[sev?.toLowerCase()] || SEV.info; }
+function getSev(sev: string) {
+  return SEV_CONFIG[sev?.toLowerCase()] || SEV_CONFIG.info;
+}
 
 function timeAgo(iso: string) {
   if (!iso) return "";
@@ -101,7 +104,8 @@ export default function Vulnerabilities() {
 
   useEffect(() => {
     let result = [...vulnerabilities];
-    if (sevFilter !== "all") result = result.filter((v) => v.severity?.toLowerCase() === sevFilter);
+    if (sevFilter !== "all")
+      result = result.filter((v) => v.severity?.toLowerCase() === sevFilter);
     if (search) {
       const q = search.toLowerCase();
       result = result.filter(
@@ -122,34 +126,54 @@ export default function Vulnerabilities() {
     low:      vulnerabilities.filter((v) => v.severity?.toLowerCase() === "low").length,
   };
 
+  // Same stat card layout as ScanHistory
+  const statCards = [
+    { label: "Total Issues", value: counts.all,      color: C.text },
+    { label: "Critical",     value: counts.critical, color: "#ef4444" },
+    { label: "High",         value: counts.high,     color: "#f97316" },
+    { label: "Medium",       value: counts.medium,   color: "#eab308" },
+  ];
+
   const TABS = [
-    { key: "all",      label: "All",      accent: C.accent },
-    { key: "critical", label: "Critical", accent: SEV.critical.color },
-    { key: "high",     label: "High",     accent: SEV.high.color },
-    { key: "medium",   label: "Medium",   accent: SEV.medium.color },
-    { key: "low",      label: "Low",      accent: SEV.low.color },
+    { key: "all",      label: "All",      color: C.accent },
+    { key: "critical", label: "Critical", color: "#ef4444" },
+    { key: "high",     label: "High",     color: "#f97316" },
+    { key: "medium",   label: "Medium",   color: "#eab308" },
+    { key: "low",      label: "Low",      color: "#3b82f6" },
   ];
 
   return (
-    <div style={{ background: C.bg, minHeight: "100vh", color: C.text, fontFamily: "'Segoe UI', system-ui, sans-serif" }}>
+    <div style={{
+      background: C.bg,
+      minHeight: "100vh",
+      color: C.text,
+      fontFamily: "ui-sans-serif, system-ui, sans-serif",
+    }}>
 
-      {/* ── Header — no top padding so it sits flush ── */}
-      <div style={{ padding: "0 32px", borderBottom: `1px solid ${C.border}` }}>
-
-        {/* Title row */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 0 16px" }}>
+      {/* ── Header — pixel-perfect match with ScanHistory ── */}
+      <div style={{ padding: "28px 32px 20px", borderBottom: `1px solid ${C.border}` }}>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: 22, fontWeight: 700, color: C.text, letterSpacing: "-0.3px" }}>
+            <div style={{
+              fontSize: 10,
+              color: C.indigo,
+              letterSpacing: "0.15em",
+              textTransform: "uppercase",
+              marginBottom: 6,
+            }}>
+
+            </div>
+            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: C.text }}>
               Vulnerabilities
             </h1>
-            <p style={{ margin: "3px 0 0", fontSize: 13, color: C.muted }}>
+            <p style={{ margin: "6px 0 0", fontSize: 12, color: C.muted }}>
               {selectedScan
                 ? `${selectedScan.repo_name || selectedScan.scan_id.substring(0, 8)} — ${counts.all} issue${counts.all !== 1 ? "s" : ""} found`
                 : "Select a scan to inspect"}
             </p>
           </div>
 
-          {/* Scan picker */}
+          {/* Scan selector — styled as a Refresh-style button area */}
           {!loadingScans && scans.length > 0 && (
             <select
               value={selectedScan?.scan_id || ""}
@@ -159,14 +183,16 @@ export default function Vulnerabilities() {
               }}
               style={{
                 background: C.surface,
-                border: `1px solid ${C.border}`,
+                border: `1px solid ${C.borderHover}`,
                 borderRadius: 8,
-                padding: "8px 14px",
+                padding: "8px 16px",
                 color: C.text,
-                fontSize: 13,
+                fontSize: 12,
+                fontWeight: 600,
                 outline: "none",
                 cursor: "pointer",
-                minWidth: 240,
+                minWidth: 220,
+                fontFamily: "inherit",
               }}
             >
               {scans.map((sc) => (
@@ -178,261 +204,503 @@ export default function Vulnerabilities() {
           )}
         </div>
 
-        {/* Severity filter tabs */}
-        {selectedScan && !loadingVulns && (
-          <div style={{ display: "flex", gap: 0, marginTop: 2 }}>
-            {TABS.map((tab) => {
-              const active = sevFilter === tab.key;
-              const count = counts[tab.key as keyof typeof counts];
-              return (
-                <button
-                  key={tab.key}
-                  onClick={() => setSevFilter(tab.key)}
-                  style={{
-                    padding: "9px 16px",
-                    background: "transparent",
-                    border: "none",
-                    borderBottom: active ? `2px solid ${tab.accent}` : "2px solid transparent",
-                    color: active ? tab.accent : C.muted,
-                    fontSize: 13,
-                    cursor: "pointer",
-                    fontFamily: "inherit",
-                    transition: "color 0.15s, border-color 0.15s",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                  }}
-                >
-                  {tab.label}
-                  {count > 0 && (
-                    <span style={{
-                      fontSize: 10,
-                      padding: "1px 6px",
-                      borderRadius: 10,
-                      background: active ? `${tab.accent}22` : C.surface,
-                      color: active ? tab.accent : C.subtle,
-                      border: `1px solid ${active ? tab.accent + "44" : C.border}`,
-                    }}>
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* ── Search bar ── */}
-      {selectedScan && (
-        <div style={{ padding: "12px 32px", borderBottom: `1px solid ${C.border}`, background: C.bg }}>
-          <div style={{ position: "relative" }}>
-            <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: C.subtle, fontSize: 14 }}>⌕</span>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search file path, message, rule ID..."
+        {/* Stat Cards — identical to ScanHistory stat cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginTop: 20 }}>
+          {statCards.map((card) => (
+            <div
+              key={card.label}
               style={{
-                width: "100%",
                 background: C.surface,
                 border: `1px solid ${C.border}`,
-                borderRadius: 8,
-                padding: "8px 36px",
-                color: C.text,
-                fontSize: 13,
-                outline: "none",
-                boxSizing: "border-box",
+                borderRadius: 10,
+                padding: "14px 16px",
+                transition: "border-color 0.2s",
               }}
-            />
-            {search && (
+              onMouseEnter={(e) => (e.currentTarget.style.borderColor = C.borderHover)}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = C.border)}
+            >
+              <div style={{
+                fontSize: 10,
+                color: C.muted,
+                letterSpacing: "0.08em",
+                textTransform: "uppercase",
+                marginBottom: 6,
+              }}>
+                {card.label}
+              </div>
+              <div style={{ fontSize: 28, fontWeight: 800, color: card.color, letterSpacing: "-0.5px" }}>
+                {loadingVulns ? "—" : card.value}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Severity Filter Tabs ── */}
+      {selectedScan && !loadingVulns && (
+        <div style={{
+          padding: "0 32px",
+          borderBottom: `1px solid ${C.border}`,
+          display: "flex",
+        }}>
+          {TABS.map((tab) => {
+            const active = sevFilter === tab.key;
+            const count = counts[tab.key as keyof typeof counts];
+            return (
               <button
-                onClick={() => setSearch("")}
-                style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: C.muted, cursor: "pointer", fontSize: 14 }}
-              >✕</button>
-            )}
-          </div>
+                key={tab.key}
+                onClick={() => setSevFilter(tab.key)}
+                style={{
+                  padding: "12px 18px",
+                  background: "transparent",
+                  border: "none",
+                  borderBottom: active ? `2px solid ${tab.color}` : "2px solid transparent",
+                  color: active ? tab.color : C.muted,
+                  fontSize: 13,
+                  fontWeight: active ? 600 : 400,
+                  cursor: "pointer",
+                  fontFamily: "inherit",
+                  transition: "color 0.15s, border-color 0.15s",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                {tab.label}
+                {count > 0 && (
+                  <span style={{
+                    fontSize: 11,
+                    padding: "2px 7px",
+                    borderRadius: 20,
+                    background: active ? `${tab.color}20` : C.surface,
+                    color: active ? tab.color : C.subtle,
+                    border: `1px solid ${active ? tab.color + "40" : C.border}`,
+                    fontWeight: 600,
+                  }}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       )}
 
-      {/* ── Content ── */}
+      {/* ── Search Bar — identical to ScanHistory filter bar ── */}
+      {selectedScan && (
+        <div style={{
+          padding: "16px 32px",
+          borderBottom: `1px solid ${C.border}`,
+          display: "flex",
+          gap: 12,
+        }}>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search file path, message, rule ID..."
+            style={{
+              flex: 1,
+              background: C.surface,
+              border: `1px solid ${C.border}`,
+              borderRadius: 8,
+              padding: "9px 14px",
+              color: C.text,
+              fontSize: 13,
+              outline: "none",
+              fontFamily: "inherit",
+              transition: "border-color 0.2s",
+            }}
+            onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(99,102,241,0.5)")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = C.border)}
+          />
+        </div>
+      )}
+
+      {/* ── Vulnerability List ── */}
       <div style={{ padding: "20px 32px" }}>
         {loadingScans ? (
-          <div style={{ color: C.muted, fontSize: 13 }}>Loading scans...</div>
+          <div style={{ color: C.muted, fontSize: 13, padding: 20 }}>Loading scans...</div>
         ) : !selectedScan ? (
-          <div style={{ textAlign: "center", padding: "80px 20px", color: C.muted }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🔒</div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: C.text, marginBottom: 8 }}>No completed scans yet</div>
-            <div style={{ fontSize: 13 }}>Go to Repositories and run a scan to see vulnerabilities here.</div>
+          <div style={{ textAlign: "center", padding: "60px 20px", color: C.muted }}>
+            <div style={{ fontSize: 40, marginBottom: 12, color: C.subtle }}>⊘</div>
+            <div style={{ fontSize: 14 }}>No completed scans yet. Start scanning from the Repositories page.</div>
           </div>
         ) : loadingVulns ? (
           <div style={{ color: C.muted, fontSize: 13, padding: 20 }}>Loading vulnerabilities...</div>
         ) : filtered.length === 0 ? (
           <div style={{ textAlign: "center", padding: "60px 20px", color: C.muted }}>
-            {search ? (
+            {vulnerabilities.length === 0 ? (
               <>
-                <div style={{ fontSize: 32, marginBottom: 12 }}>🔎</div>
-                <div style={{ fontSize: 14, color: C.text, marginBottom: 16 }}>
-                  No vulnerabilities match <span style={{ color: C.accent }}>"{search}"</span>
-                </div>
-                <button
-                  onClick={() => { setSearch(""); setSevFilter("all"); }}
-                  style={{ padding: "7px 16px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 7, color: C.text, fontSize: 13, cursor: "pointer" }}
-                >
-                  Clear search
-                </button>
-              </>
-            ) : sevFilter !== "all" ? (
-              <>
-                <div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div>
-                <div style={{ fontSize: 14, marginBottom: 16 }}>No {sevFilter} vulnerabilities in this scan.</div>
-                <button
-                  onClick={() => setSevFilter("all")}
-                  style={{ padding: "7px 16px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 7, color: C.text, fontSize: 13, cursor: "pointer" }}
-                >
-                  Show all severities
-                </button>
+                <div style={{ fontSize: 32, marginBottom: 12, color: "#34d399" }}>✓</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: "#34d399" }}>No vulnerabilities found — this scan is clean.</div>
               </>
             ) : (
               <>
-                <div style={{ fontSize: 40, marginBottom: 12 }}>✅</div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: "#3fb950" }}>
-                  No vulnerabilities found — this scan is clean!
-                </div>
+                <div style={{ fontSize: 32, marginBottom: 12, color: C.subtle }}>⌕</div>
+                <div style={{ fontSize: 14, marginBottom: 16 }}>No results match your filters.</div>
+                <button
+                  onClick={() => { setSearch(""); setSevFilter("all"); }}
+                  style={{
+                    padding: "8px 18px",
+                    background: C.surface,
+                    border: `1px solid ${C.borderHover}`,
+                    borderRadius: 8,
+                    color: C.text,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  Clear filters
+                </button>
               </>
             )}
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <div style={{ fontSize: 12, color: C.muted, marginBottom: 8 }}>
-              Showing {filtered.length} of {vulnerabilities.length} vulnerabilities
-              {search && ` matching "${search}"`}
+          <>
+            <div style={{ fontSize: 12, color: C.muted, marginBottom: 16 }}>
+              Showing{" "}
+              <span style={{ color: C.text, fontWeight: 600 }}>{filtered.length}</span>
+              {" "}of{" "}
+              <span style={{ color: C.text, fontWeight: 600 }}>{vulnerabilities.length}</span>
+              {" "}vulnerabilities
             </div>
 
-            {filtered.map((vuln) => {
-              const sv = s(vuln.severity);
-              const isOpen = expanded === vuln.id;
-              const fileName = vuln.file_path?.split(/[\\/]/).pop() || vuln.file_path;
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {filtered.map((vuln) => {
+                const sv = getSev(vuln.severity);
+                const isOpen = expanded === vuln.id;
+                const fileName = vuln.file_path?.split(/[\\/]/).pop() || vuln.file_path;
 
-              return (
-                <div
-                  key={vuln.id}
-                  style={{
-                    background: isOpen ? sv.bg : C.surface,
-                    border: `1px solid ${isOpen ? sv.border : C.border}`,
-                    borderLeft: `3px solid ${sv.color}`,
-                    borderRadius: 8,
-                    overflow: "hidden",
-                    transition: "border-color 0.15s, background 0.15s",
-                  }}
-                >
-                  {/* Row */}
+                return (
                   <div
-                    onClick={() => setExpanded(isOpen ? null : vuln.id)}
-                    style={{ padding: "12px 18px", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, userSelect: "none" }}
+                    key={vuln.id}
+                    style={{
+                      background: C.surface,
+                      border: `1px solid ${isOpen ? C.borderHover : C.border}`,
+                      borderRadius: 10,
+                      overflow: "hidden",
+                      transition: "border-color 0.15s",
+                    }}
                   >
-                    <span style={{
-                      fontSize: 10, padding: "3px 8px", borderRadius: 4, fontWeight: 700, flexShrink: 0,
-                      background: sv.bg, color: sv.color, border: `1px solid ${sv.border}`,
-                      textTransform: "uppercase", letterSpacing: "0.06em",
-                    }}>
-                      {vuln.severity || "?"}
-                    </span>
-
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: C.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginBottom: 2 }}>
-                        {vuln.message}
-                      </div>
-                      <div style={{ fontSize: 11, color: C.muted, display: "flex", gap: 10 }}>
-                        <span style={{ color: C.accent, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 300 }}>{fileName}</span>
-                        <span>L{vuln.start_line}</span>
-                        {vuln.vulnerability_type && <span style={{ color: C.subtle }}>{vuln.vulnerability_type}</span>}
-                      </div>
-                    </div>
-
-                    <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-                      {vuln.cwe_ids?.slice(0, 2).map((c) => (
-                        <span key={c} style={{ fontSize: 10, padding: "2px 7px", background: "rgba(88,166,255,0.08)", color: C.accent, borderRadius: 4, border: "1px solid rgba(88,166,255,0.2)" }}>
-                          {c}
+                    {/* ── Card row — IDENTICAL grid to ScanHistory scan rows ── */}
+                    <div
+                      onClick={() => setExpanded(isOpen ? null : vuln.id)}
+                      style={{
+                        padding: "16px 20px",
+                        cursor: "pointer",
+                        display: "grid",
+                        gridTemplateColumns: "auto 1fr auto",
+                        gap: 16,
+                        alignItems: "center",
+                        userSelect: "none",
+                      }}
+                      onMouseEnter={(e) => {
+                        const card = e.currentTarget.parentElement as HTMLDivElement;
+                        card.style.borderColor = C.borderHover;
+                        card.style.background = "#18181b";
+                      }}
+                      onMouseLeave={(e) => {
+                        const card = e.currentTarget.parentElement as HTMLDivElement;
+                        if (!isOpen) {
+                          card.style.borderColor = C.border;
+                          card.style.background = C.surface;
+                        }
+                      }}
+                    >
+                      {/* LEFT: Severity indicator — mirrors ScanHistory status block exactly */}
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                        <div style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 8,
+                          background: sv.bg,
+                          border: `1px solid ${sv.border}`,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 18,
+                          fontWeight: 700,
+                          color: sv.color,
+                          fontFamily: "ui-monospace, monospace",
+                        }}>
+                          {sv.symbol}
+                        </div>
+                        <span style={{
+                          fontSize: 9,
+                          color: sv.color,
+                          textTransform: "uppercase",
+                          letterSpacing: "0.05em",
+                          fontWeight: 700,
+                        }}>
+                          {sv.label}
                         </span>
-                      ))}
-                    </div>
+                      </div>
 
-                    <span style={{ color: C.muted, fontSize: 11, flexShrink: 0, display: "inline-block", transition: "transform 0.2s", transform: isOpen ? "rotate(180deg)" : "rotate(0deg)" }}>▾</span>
-                  </div>
-
-                  {/* Expanded detail */}
-                  {isOpen && (
-                    <div style={{ borderTop: `1px solid ${sv.border}`, padding: "18px 20px", display: "flex", flexDirection: "column", gap: 14 }}>
-
-                      {(vuln.file_path || vuln.start_line) && (
-                        <div style={{ background: C.bg, borderRadius: 7, padding: "9px 13px", fontSize: 12, color: C.muted, fontFamily: "'Fira Code', 'Courier New', monospace", border: `1px solid ${C.border}` }}>
-                          📄 <span style={{ color: vuln.file_path ? C.text : C.subtle }}>
-                            {vuln.file_path || "File path not recorded by scanner"}
+                      {/* CENTER: Main info — same structure as ScanHistory main info column */}
+                      <div>
+                        {/* Row 1: rule id · filename · timeago */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
+                          {vuln.rule_id && (
+                            <code style={{ fontSize: 12, color: C.accent }}>
+                              {vuln.rule_id.substring(0, 12)}
+                            </code>
+                          )}
+                          <span style={{ fontSize: 10, color: C.subtle }}>·</span>
+                          <span style={{ fontSize: 13, color: C.text, fontWeight: 600 }}>
+                            {fileName}
                           </span>
                           {vuln.start_line > 0 && (
-                            <>
-                              <span style={{ color: C.subtle, margin: "0 8px" }}>·</span>
-                              Line {vuln.start_line}{vuln.end_line && vuln.end_line !== vuln.start_line ? `–${vuln.end_line}` : ""}
-                            </>
+                            <span style={{ fontSize: 12, color: C.subtle }}>
+                              L{vuln.start_line}
+                              {vuln.end_line && vuln.end_line !== vuln.start_line ? `–${vuln.end_line}` : ""}
+                            </span>
                           )}
                         </div>
-                      )}
 
-                      {vuln.code_snippet && (
-                        <div>
-                          <div style={{ fontSize: 10, color: C.subtle, textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 7 }}>
-                            Flagged Code — the exact line(s) identified as vulnerable
-                          </div>
-                          <pre style={{ background: C.bg, border: `1px solid ${sv.border}`, borderRadius: 8, padding: "13px 16px", fontSize: 12, color: C.text, margin: 0, overflowX: "auto", lineHeight: 1.8, whiteSpace: "pre-wrap", wordBreak: "break-word", fontFamily: "'Fira Code', 'Courier New', monospace" }}>
-                            {vuln.code_snippet}
-                          </pre>
+                        {/* Row 2: message — matches the bold repo name line in ScanHistory */}
+                        <div style={{
+                          fontSize: 13,
+                          color: C.muted,
+                          marginBottom: 6,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          maxWidth: "100%",
+                        }}>
+                          {vuln.message}
                         </div>
-                      )}
 
-                      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 8 }}>
-                        {[
-                          { label: "Rule ID",    value: vuln.rule_id,            color: C.accent },
-                          { label: "Type",       value: vuln.vulnerability_type, color: C.text },
-                          { label: "Confidence", value: vuln.confidence,         color: C.text },
-                          { label: "Scanner",    value: vuln.scanner_name,       color: C.text },
-                        ].filter((m) => m.value).map((m) => (
-                          <div key={m.label} style={{ background: C.bg, borderRadius: 7, padding: "9px 13px", border: `1px solid ${C.border}` }}>
-                            <div style={{ fontSize: 10, color: C.subtle, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>{m.label}</div>
-                            <div style={{ fontSize: 12, color: m.color, wordBreak: "break-all" }}>{m.value}</div>
-                          </div>
-                        ))}
+                        {/* Row 3: badges — same pill style as ScanHistory */}
+                        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                          {vuln.vulnerability_type && (
+                            <span style={{
+                              fontSize: 11, padding: "2px 8px",
+                              background: sv.bg,
+                              color: sv.color,
+                              borderRadius: 4,
+                              border: `1px solid ${sv.border}`,
+                            }}>
+                              {vuln.vulnerability_type}
+                            </span>
+                          )}
+                          {vuln.cwe_ids?.slice(0, 2).map((c) => (
+                            <span key={c} style={{
+                              fontSize: 11, padding: "2px 8px",
+                              background: "rgba(99,102,241,0.10)",
+                              color: C.accent,
+                              borderRadius: 4,
+                              border: "1px solid rgba(99,102,241,0.20)",
+                            }}>
+                              {c}
+                            </span>
+                          ))}
+                          {vuln.confidence && (
+                            <span style={{
+                              fontSize: 11, padding: "2px 8px",
+                              background: "rgba(113,113,122,0.08)",
+                              color: C.subtle,
+                              borderRadius: 4,
+                              border: `1px solid ${C.border}`,
+                            }}>
+                              {vuln.confidence}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      {(vuln.cwe_ids?.length > 0 || vuln.owasp_categories?.length > 0) && (
-                        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-                          {vuln.cwe_ids?.length > 0 && (
-                            <div>
-                              <div style={{ fontSize: 10, color: C.subtle, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>CWE</div>
-                              <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-                                {vuln.cwe_ids.map((c) => (
-                                  <span key={c} style={{ fontSize: 11, padding: "3px 9px", background: "rgba(88,166,255,0.08)", color: C.accent, borderRadius: 4, border: "1px solid rgba(88,166,255,0.2)" }}>{c}</span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {vuln.owasp_categories?.length > 0 && (
-                            <div>
-                              <div style={{ fontSize: 10, color: C.subtle, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 6 }}>OWASP</div>
-                              <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
-                                {vuln.owasp_categories.map((o) => (
-                                  <span key={o} style={{ fontSize: 11, padding: "3px 9px", background: "rgba(210,153,34,0.08)", color: "#d29922", borderRadius: 4, border: "1px solid rgba(210,153,34,0.2)" }}>{o}</span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      {/* RIGHT: Expand/Collapse button — mirrors ScanHistory "View →" button */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setExpanded(isOpen ? null : vuln.id); }}
+                          style={{
+                            padding: "6px 14px",
+                            background: C.surface,
+                            border: `1px solid ${C.borderHover}`,
+                            borderRadius: 6,
+                            color: C.text,
+                            fontSize: 12,
+                            cursor: "pointer",
+                            fontFamily: "inherit",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {isOpen ? "Close ↑" : "Details →"}
+                        </button>
+                      </div>
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+
+                    {/* ── Expanded Detail Panel ── */}
+                    {isOpen && (
+                      <div style={{
+                        borderTop: `1px solid ${C.border}`,
+                        padding: "20px 24px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 16,
+                        background: "#18181b",
+                      }}>
+
+                        {/* File path */}
+                        {(vuln.file_path || vuln.start_line) && (
+                          <div style={{
+                            background: C.bg,
+                            borderRadius: 8,
+                            padding: "10px 14px",
+                            fontSize: 12,
+                            color: C.muted,
+                            fontFamily: "'Fira Code', monospace",
+                            border: `1px solid ${C.border}`,
+                          }}>
+                            📄{" "}
+                            <span style={{ color: C.text }}>
+                              {vuln.file_path || "File path not recorded"}
+                            </span>
+                            {vuln.start_line > 0 && (
+                              <>
+                                <span style={{ color: C.subtle, margin: "0 8px" }}>·</span>
+                                Line {vuln.start_line}
+                                {vuln.end_line && vuln.end_line !== vuln.start_line ? `–${vuln.end_line}` : ""}
+                              </>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Code snippet */}
+                        {vuln.code_snippet && (
+                          <div>
+                            <div style={{
+                              fontSize: 10,
+                              color: C.subtle,
+                              textTransform: "uppercase",
+                              letterSpacing: "0.12em",
+                              marginBottom: 8,
+                              fontWeight: 600,
+                            }}>
+                              Flagged Code
+                            </div>
+                            <pre style={{
+                              background: C.bg,
+                              border: `1px solid ${sv.color}30`,
+                              borderRadius: 8,
+                              padding: "14px 18px",
+                              fontSize: 12,
+                              color: C.text,
+                              margin: 0,
+                              overflowX: "auto",
+                              lineHeight: 1.8,
+                              whiteSpace: "pre-wrap",
+                              wordBreak: "break-word",
+                              fontFamily: "'Fira Code', monospace",
+                            }}>
+                              {vuln.code_snippet}
+                            </pre>
+                          </div>
+                        )}
+
+                        {/* Metadata grid */}
+                        <div style={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))",
+                          gap: 10,
+                        }}>
+                          {[
+                            { label: "Rule ID",    value: vuln.rule_id,            color: C.accent },
+                            { label: "Type",       value: vuln.vulnerability_type, color: C.text },
+                            { label: "Confidence", value: vuln.confidence,         color: C.text },
+                            { label: "Scanner",    value: vuln.scanner_name,       color: C.text },
+                          ].filter((m) => m.value).map((m) => (
+                            <div key={m.label} style={{
+                              background: C.bg,
+                              borderRadius: 8,
+                              padding: "10px 14px",
+                              border: `1px solid ${C.border}`,
+                            }}>
+                              <div style={{
+                                fontSize: 10,
+                                color: C.subtle,
+                                textTransform: "uppercase",
+                                letterSpacing: "0.1em",
+                                marginBottom: 5,
+                                fontWeight: 600,
+                              }}>
+                                {m.label}
+                              </div>
+                              <div style={{ fontSize: 13, color: m.color, wordBreak: "break-all" }}>
+                                {m.value}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* CWE / OWASP */}
+                        {(vuln.cwe_ids?.length > 0 || vuln.owasp_categories?.length > 0) && (
+                          <div style={{ display: "flex", gap: 24, flexWrap: "wrap" }}>
+                            {vuln.cwe_ids?.length > 0 && (
+                              <div>
+                                <div style={{
+                                  fontSize: 10,
+                                  color: C.subtle,
+                                  textTransform: "uppercase",
+                                  letterSpacing: "0.1em",
+                                  marginBottom: 8,
+                                  fontWeight: 600,
+                                }}>
+                                  CWE
+                                </div>
+                                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                                  {vuln.cwe_ids.map((c) => (
+                                    <span key={c} style={{
+                                      fontSize: 12,
+                                      padding: "4px 10px",
+                                      background: "rgba(99,102,241,0.10)",
+                                      color: C.accent,
+                                      borderRadius: 6,
+                                      border: "1px solid rgba(99,102,241,0.20)",
+                                    }}>
+                                      {c}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {vuln.owasp_categories?.length > 0 && (
+                              <div>
+                                <div style={{
+                                  fontSize: 10,
+                                  color: C.subtle,
+                                  textTransform: "uppercase",
+                                  letterSpacing: "0.1em",
+                                  marginBottom: 8,
+                                  fontWeight: 600,
+                                }}>
+                                  OWASP
+                                </div>
+                                <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                                  {vuln.owasp_categories.map((o) => (
+                                    <span key={o} style={{
+                                      fontSize: 12,
+                                      padding: "4px 10px",
+                                      background: "rgba(249,115,22,0.10)",
+                                      color: "#f97316",
+                                      borderRadius: 6,
+                                      border: "1px solid rgba(249,115,22,0.20)",
+                                    }}>
+                                      {o}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
     </div>

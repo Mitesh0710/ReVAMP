@@ -20,32 +20,30 @@ import RepositoriesPage from "./app/repositories/page";
 
 function Router() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/verify" element={<VerifyPage />} />
+    <Routes>
+      {/* Public Routes */}
+      <Route path="/" element={<Home />} />
+      <Route path="/verify" element={<VerifyPage />} />
 
-        {/* Protected Routes - wrapped in Layout */}
-        <Route
-          element={
-            <ProtectedRoute>
-              <Layout />
-            </ProtectedRoute>
-          }
-        >
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/repositories" element={<RepositoriesPage />} />
-          <Route path="/vulnerabilities" element={<Vulnerabilities />} />
-          <Route path="/history" element={<ScanHistory />} />
-          <Route path="/docs" element={<Documentation />} />
-          <Route path="/settings" element={<SettingsPage />} />
-        </Route>
+      {/* Protected Routes - wrapped in Layout */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/repositories" element={<RepositoriesPage />} />
+        <Route path="/vulnerabilities" element={<Vulnerabilities />} />
+        <Route path="/history" element={<ScanHistory />} />
+        <Route path="/docs" element={<Documentation />} />
+        <Route path="/settings" element={<SettingsPage />} />
+      </Route>
 
-        {/* 404 Page */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
+      {/* 404 Page */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 }
 
@@ -54,10 +52,18 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <ThemeProvider>
-          <AuthProvider>
-            <Toaster />
-            <Router />
-          </AuthProvider>
+          {/* 
+            FIX: BrowserRouter now wraps AuthProvider.
+            Previously AuthProvider was outside BrowserRouter, which meant
+            it couldn't use useNavigate() — forcing it to use window.location.href
+            which triggers full page reloads and causes the infinite reload loop.
+          */}
+          <BrowserRouter>
+            <AuthProvider>
+              <Toaster />
+              <Router />
+            </AuthProvider>
+          </BrowserRouter>
         </ThemeProvider>
       </TooltipProvider>
     </QueryClientProvider>
